@@ -1,8 +1,4 @@
 
 .project
 
-.settings/com.powerflasher.fdt.classpath
-
-.settings/com.powerflasher.fdt.core.prefs
-
-.settings/org.eclipse.core.resources.prefs
+.settings
