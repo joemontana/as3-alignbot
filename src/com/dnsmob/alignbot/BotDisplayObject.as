@@ -11,11 +11,11 @@ package com.dnsmob.alignbot {
 		public var displayObject:DisplayObject;
 		public var rect:BotRectangle;
 		public var alignment:Array;
-		public var scaleFactor:Number;
+		public var scaleFactor:String;
 		private static const stageWidth:uint = AlignBot.stageWidth;
 		private static const stageHeight:uint = AlignBot.stageHeight;
 
-		public function BotDisplayObject (displayObject:DisplayObject, rect:BotRectangle, alignment:Array, scaleFactor:Number) {
+		public function BotDisplayObject (displayObject:DisplayObject, rect:BotRectangle, alignment:Array, scaleFactor:String) {
 			this.scaleFactor = scaleFactor;
 			this.alignment = alignment;
 			this.rect = rect;

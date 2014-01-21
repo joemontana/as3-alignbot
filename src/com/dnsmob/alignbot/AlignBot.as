@@ -19,7 +19,7 @@ package com.dnsmob.alignbot {
 			AlignBot.sanitize = sanitize;
 		}
 
-		public static function control (displayObject:DisplayObject, alignment:Array, rect:BotRectangle = null, scaleFactor:Number = 1):void {
+		public static function control (displayObject:DisplayObject, alignment:Array, rect:BotRectangle = null, scaleFactor:String = BotScale.NO_SCALE):void {
 			if (alignment) {
 				if (!rect) {
 					rect = new BotRectangle ();
