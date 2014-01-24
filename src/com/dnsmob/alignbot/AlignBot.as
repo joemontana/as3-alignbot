@@ -12,6 +12,7 @@ package com.dnsmob.alignbot {
 		private static var sanitize:Boolean;
 		internal static var stageWidth:uint;
 		internal static var stageHeight:uint;
+		private static const scale:String = BotScale.NO_SCALE;
 
 		public function AlignBot (stageWidth:uint, stageHeight:uint, sanitize:Boolean = false) {
 			AlignBot.stageWidth = stageWidth;
@@ -19,25 +20,19 @@ package com.dnsmob.alignbot {
 			AlignBot.sanitize = sanitize;
 		}
 
-		public static function control (displayObject:DisplayObject, alignment:Array, rect:BotRectangle = null, scaleFactor:String = BotScale.NO_SCALE):void {
+		public static function control (displayObject:DisplayObject, alignment:Array, rect:BotRectangle = null, scaleType:String = scale):void {
 			if (alignment) {
-				if (!rect) {
-					rect = new BotRectangle ();
-					rect.top = displayObject.y;
-					rect.bottom = stageHeight - (displayObject.y + displayObject.height);
-					rect.left = displayObject.x;
-					rect.right = stageWidth - (displayObject.x + displayObject.width);
-				}
+				if (!rect) rect = new BotRectangle ();
 
 				var pos:int = objs.indexOf (displayObject);
 				if (pos < 0) {
 					objs.push (displayObject);
-					items.push (new BotDisplayObject (displayObject, rect, alignment, scaleFactor));
+					items.push (new BotDisplayObject (displayObject, rect, alignment, scaleType));
 				} else {
 					var ldo:BotDisplayObject = items [pos];
 					ldo.rect = rect;
 					ldo.alignment = alignment;
-					ldo.scaleFactor = scaleFactor;
+					ldo.scaleType = scaleType;
 				}
 				sort ();
 			}
