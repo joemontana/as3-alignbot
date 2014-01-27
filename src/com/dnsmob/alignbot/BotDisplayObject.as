@@ -28,6 +28,7 @@ package com.dnsmob.alignbot {
 			this.rect = rect;
 			this.displayObject = displayObject;
 			addListeners ();
+			getDeviceOrientation ();
 		}
 
 		private function addListeners ():void {
@@ -36,23 +37,35 @@ package com.dnsmob.alignbot {
 			displayObject.stage.addEventListener (StageOrientationEvent.ORIENTATION_CHANGE, onOrientationChange);
 		}
 
+		private function getDeviceOrientation ():void {
+			var max:uint = Math.max (stageWidth, stageHeight);
+			var min:uint = Math.min (stageWidth, stageHeight);
+			if (displayObject.stage.deviceOrientation == StageOrientation.ROTATED_LEFT || displayObject.stage.deviceOrientation == StageOrientation.ROTATED_RIGHT) {
+				stageWidth = max;
+				stageHeight = min;
+			} else {
+				stageWidth = min;
+				stageHeight = max;
+			}
+		}
+
 		private function onOrientationChanging (event:StageOrientationEvent):void {
 			var temp:uint;
-			if (event.afterOrientation == StageOrientation.DEFAULT || event.afterOrientation == StageOrientation.UPSIDE_DOWN){
-				temp = stageWidth;
-				stageWidth = stageHeight;
-				stageHeight = temp;
-			} else {
+			if ((event.afterOrientation == StageOrientation.DEFAULT || event.afterOrientation == StageOrientation.UPSIDE_DOWN) && event.afterOrientation != StageOrientation.UNKNOWN) {
 				temp = stageHeight;
 				stageHeight = stageWidth;
 				stageWidth = temp;
+			} else {
+				temp = stageWidth;
+				stageWidth = stageHeight;
+				stageHeight = temp;
 			}
-			TweenMax.to (displayObject, 5, { x:getNewPositions ().x, y:getNewPositions ().y });
 		}
 
 		private function onOrientationChange (event:StageOrientationEvent):void {
-			TweenMax.killTweensOf (displayObject);
-			sort ();
+			sortScale ();
+			if (alignment)
+				TweenMax.to (displayObject, .30, { x:getNewPositions ().x, y:getNewPositions ().y });
 		}
 
 		private function onAddedToStage (event:Event):void {
@@ -139,9 +152,14 @@ package com.dnsmob.alignbot {
 		}
 
 		public function destroy ():void {
+			displayObject.stage.removeEventListener (StageOrientationEvent.ORIENTATION_CHANGING, onOrientationChanging);
+			displayObject.stage.removeEventListener (StageOrientationEvent.ORIENTATION_CHANGE, onOrientationChange);
+
 			displayObject.removeEventListener (Event.ADDED_TO_STAGE, onAddedToStage);
 			if (displayObject.parent && displayObject.parent.contains (displayObject))
 				displayObject.parent.removeChild (displayObject);
+
+			TweenMax.killTweensOf (displayObject);
 
 			displayObject = null;
 		}
