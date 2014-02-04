@@ -9,5 +9,6 @@ package com.dnsmob.alignbot {
 		public static const FIT_HEIGHT:String = 'FIT_HEIGHT';
 		public static const STRETCH:String = 'STRETCH';
 		public static const NO_SCALE:String = 'NO_SCALE';
+		public static const RETAIN_PROPORTION:String = "RETAIN_PROPORTION";
 	}
 }

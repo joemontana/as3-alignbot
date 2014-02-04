@@ -2,21 +2,26 @@ package com.dnsmob.alignbot {
 
 	import flash.display.DisplayObject;
 
+	import com.dnsmob.alignbot.IBotDispayObject;
+
 	/**
 	 * @author denis
 	 */
 	public class AlignBot {
 
 		private static var items:Array = new Array ();
-		private static var objs:Array = new Array ();
-		private static var sanitize:Boolean;
-		internal static var stageWidth:uint;
-		internal static var stageHeight:uint;
+		internal static var sanitize:Boolean;
+		internal static var originalStageWidth:uint;
+		internal static var originalStageHeight:uint;
+		internal static var currentStageWidth:uint;
+		internal static var currentStageHeight:uint;
 		private static const scale:String = BotScale.NO_SCALE;
 
-		public function AlignBot (stageWidth:uint, stageHeight:uint, sanitize:Boolean = false) {
-			AlignBot.stageWidth = stageWidth;
-			AlignBot.stageHeight = stageHeight;
+		public function AlignBot (originalStageWidth:uint, originalStageHeight:uint, currentStageWidth:uint, currentStageHeight:uint, sanitize:Boolean = false) {
+			AlignBot.originalStageWidth = originalStageWidth;
+			AlignBot.originalStageHeight = originalStageHeight;
+			AlignBot.currentStageWidth = currentStageWidth;
+			AlignBot.currentStageHeight = currentStageHeight;
 			AlignBot.sanitize = sanitize;
 		}
 
@@ -24,18 +29,41 @@ package com.dnsmob.alignbot {
 			if (alignment) {
 				if (!rect) rect = new BotRectangle ();
 
-				var pos:int = objs.indexOf (displayObject);
-				if (pos < 0) {
-					objs.push (displayObject);
-					items.push (new BotDisplayObject (displayObject, rect, alignment, scaleType));
-				} else {
-					var ldo:BotDisplayObject = items [pos];
+				var ldo:IBotDispayObject = getBotDisplayObject (displayObject);
+				if (ldo) {
 					ldo.rect = rect;
 					ldo.alignment = alignment;
 					ldo.scaleType = scaleType;
+				} else {
+					items.push (new BotDisplayObject (displayObject, rect, alignment, scaleType));
 				}
 				sort ();
 			}
+		}
+
+		public static function destroy (displayObject:DisplayObject):void {
+			var bdo:IBotDispayObject = getBotDisplayObject (displayObject);
+			var pos:int = items.indexOf (bdo);
+			if (pos >= 0) {
+				bdo.destroy ();
+				items.splice (pos, 1);
+			}
+		}
+
+		public static function destroyAll ():void {
+			for each (var bdo:BotDisplayObject in items) {
+				bdo.destroy ();
+			}
+			items = new Array ();
+		}
+
+		private static function getBotDisplayObject (displayObject:DisplayObject):BotDisplayObject {
+			for each (var obj:BotDisplayObject in items) {
+				if (obj.displayObject == displayObject) {
+					return obj;
+				}
+			}
+			return null;
 		}
 
 		public function refresh ():void {
@@ -43,25 +71,8 @@ package com.dnsmob.alignbot {
 		}
 
 		private static function sort ():void {
-			if (sanitize == true) {
-				cleanUp ();
-			}
-
 			for each (var obj:BotDisplayObject in items) {
 				obj.sort ();
-			}
-		}
-
-		private static function cleanUp ():void {
-			for each (var obj:BotDisplayObject in items) {
-				if (!obj.displayObject.stage) {
-					var index:uint = items.indexOf (obj);
-					items.splice (index, 1);
-					objs.splice (index, 1);
-
-					obj.destroy ();
-					obj = null;
-				}
 			}
 		}
 	}
