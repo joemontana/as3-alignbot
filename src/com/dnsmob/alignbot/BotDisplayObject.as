@@ -22,16 +22,16 @@ package com.dnsmob.alignbot {
 		private var currentStageWidth:uint = AlignBot.currentStageWidth;
 		private var currentStageHeight:uint = AlignBot.currentStageHeight;
 		private var min:Number = 0;
-		private var _originalScaleX:Number;
-		private var _originalScaleY:Number;
+		private var originalScaleX:Number;
+		private var originalScaleY:Number;
 
 		public function BotDisplayObject (displayObject:DisplayObject, rect:BotRectangle, alignment:Array, scaleType:String) {
 			_scaleType = scaleType;
-			_originalScaleX = displayObject.scaleX;
-			_originalScaleY = displayObject.scaleY;
 			_alignment = alignment;
 			_rect = rect;
 			_displayObject = displayObject;
+			originalScaleX = displayObject.scaleX;
+			originalScaleY = displayObject.scaleY;
 
 			addListeners ();
 			getDeviceOrientation ();
@@ -146,8 +146,8 @@ package com.dnsmob.alignbot {
 				var w:Number = AlignBot.currentStageWidth / AlignBot.originalStageWidth;
 				var h:Number = AlignBot.currentStageHeight / AlignBot.originalStageHeight;
 				var m:Number = Math.max (w, h);
-				_displayObject.scaleX = _originalScaleX * m;
-				_displayObject.scaleY = _originalScaleY * m;
+				_displayObject.scaleX = originalScaleX * m;
+				_displayObject.scaleY = originalScaleY * m;
 			} else if (scaleType != BotScale.NO_SCALE) {
 				if (scaleType == BotScale.STRETCH) {
 					_displayObject.width = currentStageWidth;
@@ -176,10 +176,14 @@ package com.dnsmob.alignbot {
 		}
 
 		public function destroy ():void {
+			NativeApplication.nativeApplication.removeEventListener (Event.ACTIVATE, onApplicationActivated);
+			
 			_displayObject.stage.removeEventListener (StageOrientationEvent.ORIENTATION_CHANGING, onOrientationChanging);
 			_displayObject.stage.removeEventListener (StageOrientationEvent.ORIENTATION_CHANGE, onOrientationChange);
 
 			_displayObject.removeEventListener (Event.ADDED_TO_STAGE, onAddedToStage);
+			_displayObject.removeEventListener (Event.REMOVED_FROM_STAGE, onRemovedFromStage);
+			
 			if (_displayObject.parent && _displayObject.parent.contains (_displayObject))
 				_displayObject.parent.removeChild (_displayObject);
 
