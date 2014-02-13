@@ -16,13 +16,19 @@ package com.dnsmob.alignbot {
 		internal static var currentStageWidth:uint;
 		internal static var currentStageHeight:uint;
 		private static const scale:String = BotScale.NO_SCALE;
+		private static var instantiated:Boolean = false;
 
-		public function AlignBot (originalStageWidth:uint, originalStageHeight:uint, currentStageWidth:uint, currentStageHeight:uint, sanitize:Boolean = false) {
-			AlignBot.originalStageWidth = originalStageWidth;
-			AlignBot.originalStageHeight = originalStageHeight;
-			AlignBot.currentStageWidth = currentStageWidth;
-			AlignBot.currentStageHeight = currentStageHeight;
-			AlignBot.sanitize = sanitize;
+		public static function setup (originalStageWidth:uint, originalStageHeight:uint, currentStageWidth:uint, currentStageHeight:uint, sanitize:Boolean = false):void {
+			if (!instantiated) {
+				instantiated = true;
+				AlignBot.originalStageWidth = originalStageWidth;
+				AlignBot.originalStageHeight = originalStageHeight;
+				AlignBot.currentStageWidth = currentStageWidth;
+				AlignBot.currentStageHeight = currentStageHeight;
+				AlignBot.sanitize = sanitize;
+			} else {
+				new Error ('[alignbot has already been instantiated]');
+			}
 		}
 
 		public static function control (displayObject:DisplayObject, alignment:Array, rect:BotRectangle = null, scaleType:String = scale):void {
@@ -57,7 +63,7 @@ package com.dnsmob.alignbot {
 			items = new Array ();
 		}
 
-		private static function getBotDisplayObject (displayObject:DisplayObject):BotDisplayObject {
+		private static function getFlashDisplayObject (displayObject:DisplayObject):BotDisplayObject {
 			for each (var obj:BotDisplayObject in items) {
 				if (obj.displayObject == displayObject) {
 					return obj;
@@ -66,7 +72,21 @@ package com.dnsmob.alignbot {
 			return null;
 		}
 
-		public function refresh ():void {
+		private static function getBotDisplayObject (displayObject:DisplayObject):IBotDispayObject {
+			switch (displayType (displayObject)) {
+				case 'flash':
+					return getFlashDisplayObject (displayObject);
+				case 'starling':
+				default:
+					return null;
+			}
+		}
+
+		private static function displayType (displayObject:DisplayObject):String {
+			return 'flash';
+		}
+
+		public static function refresh ():void {
 			sort ();
 		}
 
