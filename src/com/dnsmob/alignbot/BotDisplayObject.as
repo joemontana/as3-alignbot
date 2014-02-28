@@ -1,14 +1,14 @@
 package com.dnsmob.alignbot {
 
-	import flash.desktop.NativeApplication;
-	import flash.display.StageOrientation;
-	import flash.geom.Point;
-
 	import com.greensock.TweenMax;
 
-	import flash.events.StageOrientationEvent;
+	import flash.desktop.NativeApplication;
 	import flash.display.DisplayObject;
+	import flash.display.StageOrientation;
 	import flash.events.Event;
+	import flash.events.StageOrientationEvent;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
 
 	/**
 	 * @author denis
@@ -19,22 +19,27 @@ package com.dnsmob.alignbot {
 		private var _rect:BotRectangle;
 		private var _alignment:Array;
 		private var _scaleType:String;
-		private var currentStageWidth:uint = AlignBot.currentStageWidth;
-		private var currentStageHeight:uint = AlignBot.currentStageHeight;
+		private var _viewPort:Rectangle;
+		private var currentStageWidth:uint;
+		private var currentStageHeight:uint;
 		private var min:Number = 0;
 		private var originalScaleX:Number;
 		private var originalScaleY:Number;
+		private var _resizedViewPort:Rectangle;
 
-		public function BotDisplayObject (displayObject:DisplayObject, rect:BotRectangle, alignment:Array, scaleType:String) {
+		public function BotDisplayObject (displayObject:DisplayObject, rect:BotRectangle, alignment:Array, scaleType:String, viewPort:Rectangle) {
+			currentStageWidth = AlignBot.currentStageWidth;
+			currentStageHeight = AlignBot.currentStageHeight;
 			_scaleType = scaleType;
 			_alignment = alignment;
 			_rect = rect;
 			_displayObject = displayObject;
+			_viewPort = viewPort;
+			_resizedViewPort = new Rectangle (_viewPort.x, _viewPort.y, _viewPort.width, _viewPort.height);
 			originalScaleX = displayObject.scaleX;
 			originalScaleY = displayObject.scaleY;
 
 			addListeners ();
-			getDeviceOrientation ();
 		}
 
 		private function addListeners ():void {
@@ -55,28 +60,15 @@ package com.dnsmob.alignbot {
 			sort ();
 		}
 
-		private function getDeviceOrientation ():void {
-			var max:uint = Math.max (currentStageWidth, currentStageHeight);
-			var min:uint = Math.min (currentStageWidth, currentStageHeight);
-			if (_displayObject.stage.deviceOrientation == StageOrientation.ROTATED_LEFT || _displayObject.stage.deviceOrientation == StageOrientation.ROTATED_RIGHT) {
-				currentStageWidth = max;
-				currentStageHeight = min;
-			} else {
-				currentStageWidth = min;
-				currentStageHeight = max;
-			}
-		}
-
 		private function onOrientationChanging (event:StageOrientationEvent):void {
-			var temp:uint;
-			if ((event.afterOrientation == StageOrientation.DEFAULT || event.afterOrientation == StageOrientation.UPSIDE_DOWN) && event.afterOrientation != StageOrientation.UNKNOWN) {
-				temp = currentStageHeight;
-				currentStageHeight = currentStageWidth;
-				currentStageWidth = temp;
-			} else {
-				temp = currentStageWidth;
-				currentStageWidth = currentStageHeight;
-				currentStageHeight = temp;
+			if (event.afterOrientation != StageOrientation.UNKNOWN) {
+				if (event.afterOrientation == StageOrientation.DEFAULT || event.afterOrientation == StageOrientation.UPSIDE_DOWN) {
+					currentStageWidth = Math.min (AlignBot.currentStageWidth, AlignBot.currentStageHeight);
+					currentStageHeight = Math.max (AlignBot.currentStageWidth, AlignBot.currentStageHeight);
+				} else {
+					currentStageWidth = Math.max (AlignBot.currentStageWidth, AlignBot.currentStageHeight);
+					currentStageHeight = Math.min (AlignBot.currentStageWidth, AlignBot.currentStageHeight);
+				}
 			}
 		}
 
@@ -109,8 +101,8 @@ package com.dnsmob.alignbot {
 			var alignX:uint = alignment [0];
 			var alignY:uint = alignment [1];
 
-			p.x = currentStageWidth / 2 * alignX - _displayObject.width / 2 * alignX - getOffsetX ();
-			p.y = currentStageHeight / 2 * alignY - _displayObject.height / 2 * alignY - getOffsetY ();
+			p.x = currentStageWidth / 2 * alignX - _resizedViewPort.width / 2 * alignX - getOffsetX ();
+			p.y = currentStageHeight / 2 * alignY - _resizedViewPort.height / 2 * alignY - getOffsetY ();
 
 			if (alignX < 1)
 				p.x += rect.left;
@@ -148,6 +140,9 @@ package com.dnsmob.alignbot {
 				var m:Number = Math.max (w, h);
 				_displayObject.scaleX = originalScaleX * m;
 				_displayObject.scaleY = originalScaleY * m;
+				_resizedViewPort.width = _viewPort.width * m;
+				_resizedViewPort.height = _viewPort.height * m;
+				
 			} else if (scaleType != BotScale.NO_SCALE) {
 				if (scaleType == BotScale.STRETCH) {
 					_displayObject.width = currentStageWidth;
@@ -166,24 +161,30 @@ package com.dnsmob.alignbot {
 		}
 
 		private function fitWidth ():void {
-			_displayObject.height = currentStageWidth * _displayObject.height / _displayObject.width;
-			_displayObject.width = currentStageWidth;
+			var ratio:Number = _resizedViewPort.width / _viewPort.width;
+			_resizedViewPort.width = AlignBot.currentStageWidth;
+			_resizedViewPort.height = _viewPort.height * ratio;
+			_displayObject.scaleX = ratio;
+			_displayObject.scaleY = ratio;
 		}
 
 		private function fitHeight ():void {
-			_displayObject.width = currentStageHeight * _displayObject.width / _displayObject.height;
-			_displayObject.height = currentStageHeight;
+			var ratio:Number = _resizedViewPort.height / _viewPort.height;
+			_resizedViewPort.height = AlignBot.currentStageHeight;
+			_resizedViewPort.width = _viewPort.width * ratio;
+			_displayObject.scaleX = ratio;
+			_displayObject.scaleY = ratio;
 		}
 
 		public function destroy ():void {
 			NativeApplication.nativeApplication.removeEventListener (Event.ACTIVATE, onApplicationActivated);
-			
+
 			_displayObject.stage.removeEventListener (StageOrientationEvent.ORIENTATION_CHANGING, onOrientationChanging);
 			_displayObject.stage.removeEventListener (StageOrientationEvent.ORIENTATION_CHANGE, onOrientationChange);
 
 			_displayObject.removeEventListener (Event.ADDED_TO_STAGE, onAddedToStage);
 			_displayObject.removeEventListener (Event.REMOVED_FROM_STAGE, onRemovedFromStage);
-			
+
 			if (_displayObject.parent && _displayObject.parent.contains (_displayObject))
 				_displayObject.parent.removeChild (_displayObject);
 
@@ -219,6 +220,14 @@ package com.dnsmob.alignbot {
 
 		public function get displayObject ():DisplayObject {
 			return _displayObject;
+		}
+
+		public function get viewPort ():Rectangle {
+			return _viewPort;
+		}
+
+		public function set viewPort (r:Rectangle):void {
+			_viewPort = r;
 		}
 	}
 }

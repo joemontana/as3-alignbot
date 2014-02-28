@@ -1,8 +1,7 @@
 package com.dnsmob.alignbot {
 
+	import flash.geom.Rectangle;
 	import flash.display.DisplayObject;
-
-	import com.dnsmob.alignbot.IBotDispayObject;
 
 	/**
 	 * @author denis
@@ -27,21 +26,24 @@ package com.dnsmob.alignbot {
 				AlignBot.currentStageHeight = currentStageHeight;
 				AlignBot.sanitize = sanitize;
 			} else {
-				new Error ('[alignbot has already been instantiated]');
+				throw new Error ('[alignbot has already been instantiated]');
 			}
 		}
 
-		public static function control (displayObject:DisplayObject, alignment:Array, rect:BotRectangle = null, scaleType:String = scale):void {
+		public static function control (displayObject:Object, alignment:Array, rect:BotRectangle = null, scaleType:String = scale, viewPort:Rectangle = null):void {
 			if (alignment) {
 				if (!rect) rect = new BotRectangle ();
 
 				var ldo:IBotDispayObject = getBotDisplayObject (displayObject);
+				if (!viewPort) viewPort = new Rectangle (0, 0, displayObject.width, displayObject.height);
+
 				if (ldo) {
 					ldo.rect = rect;
 					ldo.alignment = alignment;
 					ldo.scaleType = scaleType;
+					ldo.viewPort = viewPort;
 				} else {
-					items.push (new BotDisplayObject (displayObject, rect, alignment, scaleType));
+					items.push (new BotDisplayObject (DisplayObject (displayObject), rect, alignment, scaleType, viewPort));
 				}
 				sort ();
 			}
@@ -63,7 +65,7 @@ package com.dnsmob.alignbot {
 			items = new Array ();
 		}
 
-		private static function getFlashDisplayObject (displayObject:DisplayObject):BotDisplayObject {
+		private static function getFlashDisplayObject (displayObject:Object):BotDisplayObject {
 			for each (var obj:BotDisplayObject in items) {
 				if (obj.displayObject == displayObject) {
 					return obj;
@@ -72,7 +74,7 @@ package com.dnsmob.alignbot {
 			return null;
 		}
 
-		private static function getBotDisplayObject (displayObject:DisplayObject):IBotDispayObject {
+		private static function getBotDisplayObject (displayObject:Object):IBotDispayObject {
 			switch (displayType (displayObject)) {
 				case 'flash':
 					return getFlashDisplayObject (displayObject);
@@ -82,7 +84,7 @@ package com.dnsmob.alignbot {
 			}
 		}
 
-		private static function displayType (displayObject:DisplayObject):String {
+		private static function displayType (displayObject:Object):String {
 			return 'flash';
 		}
 
