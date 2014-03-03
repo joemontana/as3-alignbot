@@ -91,8 +91,9 @@ package com.dnsmob.alignbot {
 
 		private function sortAlignment ():void {
 			if (alignment) {
-				_displayObject.x = getNewPositions ().x;
-				_displayObject.y = getNewPositions ().y;
+				var point:Point = displayObject.parent.globalToLocal(getNewPositions());
+				_displayObject.x = point.x;
+				_displayObject.y = point.y;
 			}
 		}
 
